@@ -319,6 +319,9 @@ namespace SwaySettings {
             if (min_ver % 2 != 0) min_ver++;
 
             foreach (string path in paths) {
+                while(FileUtils.test(path, FileTest.IS_SYMLINK)) {
+                   path = FileUtils.read_link(path);
+                }
                 if (!FileUtils.test (path, FileTest.IS_DIR)) continue;
                 try {
                     var directory = File.new_for_path (path);
@@ -326,6 +329,13 @@ namespace SwaySettings {
                         FileAttribute.STANDARD_NAME, 0);
                     FileInfo file_prop;
                     while ((file_prop = enumerator.next_file ()) != null) {
+                        var child_file_path = Path.build_path("/", path, file_prop.get_name());
+                        while(FileUtils.test(child_file_path, FileTest.IS_SYMLINK)) {
+                          child_file_path = FileUtils.read_link(child_file_path);
+                        }
+                        var child_file = File.new_for_path(child_file_path);
+                        file_prop = child_file.query_info("*", 0);
+
                         string name = file_prop.get_name ();
                         string folder_path = Path.build_path ("/", path, name);
                         string flatpak_path = Path.build_path (
